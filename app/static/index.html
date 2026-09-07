@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flashcard SRS</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --border: #e2e5ea;
+    --accent: #3b5bfd;
+    --again: #e5484d;
+    --hard: #f5a623;
+    --good: #2f9e44;
+    --easy: #3b5bfd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 1.25rem; margin: 0; }
+  nav button {
+    background: none;
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  nav button.active { background: var(--accent); color: white; border-color: var(--accent); }
+  main {
+    max-width: 720px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  section { display: none; }
+  section.active { display: block; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .deck-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .deck-row:last-child { border-bottom: none; }
+  .deck-row .meta { color: var(--muted); font-size: 0.85rem; }
+  .deck-row button {
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 6px;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    margin-left: 0.4rem;
+  }
+  form.inline { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+  input, textarea {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  input[type="text"] { flex: 1; }
+  textarea { width: 100%; resize: vertical; min-height: 3rem; }
+  button.primary {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; margin-top: 0.75rem; }
+
+  .card-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3rem 2rem;
+    text-align: center;
+    font-size: 1.4rem;
+    min-height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-box .back { color: var(--muted); font-size: 1.1rem; margin-top: 1rem; }
+  .grade-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+  }
+  .grade-buttons button {
+    border: none;
+    color: white;
+    border-radius: 8px;
+    padding: 0.7rem 0;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .grade-buttons button[data-grade="again"] { background: var(--again); }
+  .grade-buttons button[data-grade="hard"] { background: var(--hard); }
+  .grade-buttons button[data-grade="good"] { background: var(--good); }
+  .grade-buttons button[data-grade="easy"] { background: var(--easy); }
+  .reveal-btn {
+    display: block;
+    margin: 1.25rem auto 0;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.5rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .empty { color: var(--muted); text-align: center; padding: 2rem 0; }
+  .deck-select { margin-bottom: 1rem; }
+  select { padding: 0.4rem; border-radius: 6px; border: 1px solid var(--border); font-size: 0.9rem; }
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: white;
+    padding: 0.6rem 1.1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Flashcard SRS</h1>
+  <nav>
+    <button id="nav-decks" class="active">Decks</button>
+    <button id="nav-study">Study</button>
+  </nav>
+</header>
+
+<main>
+  <section id="view-decks" class="active">
+    <div class="panel">
+      <h2 style="margin-top:0;">New deck</h2>
+      <form id="deck-form" class="inline">
+        <input type="text" id="deck-name" placeholder="Deck name (e.g. Spanish Vocab)" required />
+        <button type="submit" class="primary">Add deck</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2 style="margin-top:0;">Decks</h2>
+      <div id="deck-list"><p class="empty">No decks yet — add one above.</p></div>
+    </div>
+
+    <div class="panel" id="add-card-panel" style="display:none;">
+      <h2 style="margin-top:0;">Add card to <span id="add-card-deck-name"></span></h2>
+      <form id="card-form">
+        <label for="card-front">Front</label>
+        <textarea id="card-front" required></textarea>
+        <label for="card-back">Back</label>
+        <textarea id="card-back" required></textarea>
+        <button type="submit" class="primary" style="margin-top:1rem;">Add card</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="view-study">
+    <div class="deck-select panel">
+      <label for="study-deck-select" style="margin-top:0;">Study deck</label>
+      <select id="study-deck-select">
+        <option value="">All decks</option>
+      </select>
+    </div>
+
+    <div id="study-area"></div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const state = {
+  decks: [],
+  selectedDeckIdForCards: null,
+  studyDeckId: null,
+  dueCards: [],
+  currentCard: null,
+  revealed: false,
+};
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `Request failed: ${res.status}`);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+// ---------- Navigation ----------
+const navDecks = document.getElementById('nav-decks');
+const navStudy = document.getElementById('nav-study');
+const viewDecks = document.getElementById('view-decks');
+const viewStudy = document.getElementById('view-study');
+
+navDecks.addEventListener('click', () => showView('decks'));
+navStudy.addEventListener('click', () => showView('study'));
+
+function showView(name) {
+  const isDecks = name === 'decks';
+  viewDecks.classList.toggle('active', isDecks);
+  viewStudy.classList.toggle('active', !isDecks);
+  navDecks.classList.toggle('active', isDecks);
+  navStudy.classList.toggle('active', !isDecks);
+  if (!isDecks) loadDueCards();
+}
+
+// ---------- Decks ----------
+async function loadDecks() {
+  state.decks = await api('/api/decks');
+  renderDeckList();
+  renderStudyDeckSelect();
+}
+
+function renderDeckList() {
+  const container = document.getElementById('deck-list');
+  if (state.decks.length === 0) {
+    container.innerHTML = '<p class="empty">No decks yet — add one above.</p>';
+    return;
+  }
+  container.innerHTML = '';
+  state.decks.forEach(deck => {
+    const row = document.createElement('div');
+    row.className = 'deck-row';
+    row.innerHTML = `
+      <div>
+        <strong>${escapeHtml(deck.name)}</strong>
+      </div>
+      <div>
+        <button data-action="add-card" data-id="${deck.id}">Add card</button>
+        <button data-action="study" data-id="${deck.id}">Study</button>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+  container.querySelectorAll('button[data-action="add-card"]').forEach(btn => {
+    btn.addEventListener('click', () => showAddCardPanel(parseInt(btn.dataset.id, 10)));
+  });
+  container.querySelectorAll('button[data-action="study"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.studyDeckId = parseInt(btn.dataset.id, 10);
+      document.getElementById('study-deck-select').value = state.studyDeckId;
+      showView('study');
+    });
+  });
+}
+
+function showAddCardPanel(deckId) {
+  state.selectedDeckIdForCards = deckId;
+  const deck = state.decks.find(d => d.id === deckId);
+  document.getElementById('add-card-deck-name').textContent = deck ? deck.name : '';
+  document.getElementById('add-card-panel').style.display = 'block';
+  document.getElementById('card-front').focus();
+}
+
+document.getElementById('deck-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const nameInput = document.getElementById('deck-name');
+  const name = nameInput.value.trim();
+  if (!name) return;
+  await api('/api/decks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  nameInput.value = '';
+  await loadDecks();
+  toast('Deck added');
+});
+
+document.getElementById('card-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!state.selectedDeckIdForCards) return;
+  const front = document.getElementById('card-front').value.trim();
+  const back = document.getElementById('card-back').value.trim();
+  if (!front || !back) return;
+  await api(`/api/decks/${state.selectedDeckIdForCards}/cards`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ front, back }),
+  });
+  document.getElementById('card-front').value = '';
+  document.getElementById('card-back').value = '';
+  toast('Card added');
+});
+
+function renderStudyDeckSelect() {
+  const select = document.getElementById('study-deck-select');
+  const current = select.value;
+  select.innerHTML = '<option value="">All decks</option>' + state.decks
+    .map(d => `<option value="${d.id}">${escapeHtml(d.name)}</option>`)
+    .join('');
+  select.value = current;
+}
+
+document.getElementById('study-deck-select').addEventListener('change', e => {
+  state.studyDeckId = e.target.value ? parseInt(e.target.value, 10) : null;
+  loadDueCards();
+});
+
+// ---------- Study ----------
+async function loadDueCards() {
+  const qs = state.studyDeckId ? `?deck_id=${state.studyDeckId}` : '';
+  state.dueCards = await api(`/api/cards/due${qs}`);
+  state.revealed = false;
+  nextCard();
+}
+
+function nextCard() {
+  state.currentCard = state.dueCards.length > 0 ? state.dueCards[0] : null;
+  state.revealed = false;
+  renderStudyArea();
+}
+
+function renderStudyArea() {
+  const area = document.getElementById('study-area');
+  if (!state.currentCard) {
+    area.innerHTML = '<div class="panel empty">No cards due right now. Nice work!</div>';
+    return;
+  }
+  const card = state.currentCard;
+  area.innerHTML = `
+    <div class="card-box">
+      <div>
+        <div>${escapeHtml(card.front)}</div>
+        ${state.revealed ? `<div class="back">${escapeHtml(card.back)}</div>` : ''}
+      </div>
+    </div>
+    ${state.revealed
+      ? `<div class="grade-buttons">
+           <button data-grade="again">Again</button>
+           <button data-grade="hard">Hard</button>
+           <button data-grade="good">Good</button>
+           <button data-grade="easy">Easy</button>
+         </div>`
+      : `<button class="reveal-btn" id="reveal-btn">Show answer</button>`
+    }
+    <p style="text-align:center; color:var(--muted); font-size:0.85rem; margin-top:1rem;">
+      ${state.dueCards.length} card(s) due
+    </p>
+  `;
+  if (!state.revealed) {
+    document.getElementById('reveal-btn').addEventListener('click', () => {
+      state.revealed = true;
+      renderStudyArea();
+    });
+  } else {
+    area.querySelectorAll('.grade-buttons button').forEach(btn => {
+      btn.addEventListener('click', () => submitReview(btn.dataset.grade));
+    });
+  }
+}
+
+async function submitReview(grade) {
+  const card = state.currentCard;
+  if (!card) return;
+  await api('/api/reviews', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ card_id: card.id, grade }),
+  });
+  state.dueCards.shift();
+  nextCard();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ---------- Init ----------
+loadDecks();
+</script>
+</body>
+</html>
