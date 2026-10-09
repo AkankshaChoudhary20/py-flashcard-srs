@@ -78,6 +78,9 @@ SM-2 quality scores 0 / 3 / 4 / 5). You can alternatively pass a raw
 Interactive API docs (Swagger UI) are available at `/docs` while the server
 is running.
 
+Deck names and card text are trimmed before storage. Empty or whitespace-only
+values return HTTP `422`; internal line breaks in cards are preserved.
+
 ## The SM-2 algorithm
 
 Implemented as a pure function `review(state, quality, today)` in

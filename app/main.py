@@ -15,7 +15,7 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app import db
 from app.srs import SRSState, grade_to_quality, review
@@ -37,6 +37,11 @@ def on_startup() -> None:
 class DeckCreate(BaseModel):
     name: str = Field(min_length=1)
 
+    @field_validator("name", mode="before")
+    @classmethod
+    def trim_name(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
 
 class DeckOut(BaseModel):
     id: int
@@ -47,6 +52,11 @@ class DeckOut(BaseModel):
 class CardCreate(BaseModel):
     front: str = Field(min_length=1)
     back: str = Field(min_length=1)
+
+    @field_validator("front", "back", mode="before")
+    @classmethod
+    def trim_text(cls, value):
+        return value.strip() if isinstance(value, str) else value
 
 
 class CardOut(BaseModel):
