@@ -105,3 +105,5 @@ Rules:
 See `tests/test_srs.py` for scenarios covering first reviews, consecutive
 "Good" reviews growing the interval, a lapse resetting progress, and
 boundary quality values (0, 3, 5, and out-of-range).
+
+Raw review quality must be a JSON integer; strings, booleans, and decimal values return HTTP `422` without changing the card.

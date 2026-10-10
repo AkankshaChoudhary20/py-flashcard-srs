@@ -75,7 +75,7 @@ class CardOut(BaseModel):
 class ReviewIn(BaseModel):
     card_id: int
     grade: Optional[str] = None
-    quality: Optional[int] = None
+    quality: Optional[int] = Field(default=None, strict=True)
 
     def resolve_quality(self) -> int:
         if self.quality is not None:

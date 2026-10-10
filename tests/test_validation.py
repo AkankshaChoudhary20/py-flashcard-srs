@@ -40,3 +40,20 @@ def test_valid_text_is_trimmed_and_stored(client):
     assert response.json()["front"] == "First\nSecond"
     assert response.json()["back"] == "Answer"
     assert client.get(url).json()[0]["front"] == "First\nSecond"
+
+
+@pytest.mark.parametrize("quality", [True, False, "4", 3.5, 4.0])
+def test_review_rejects_non_integer_quality_without_changing_card(client, quality):
+    deck = client.post("/api/decks", json={"name": "Study"}).json()
+    url = f"/api/decks/{deck['id']}/cards"
+    card = client.post(url, json={"front": "Q", "back": "A"}).json()
+    response = client.post("/api/reviews", json={"card_id": card["id"], "quality": quality})
+    assert response.status_code == 422
+    assert client.get(url).json() == [card]
+
+
+@pytest.mark.parametrize("quality", range(6))
+def test_review_accepts_integer_quality(client, quality):
+    deck = client.post("/api/decks", json={"name": "Study"}).json()
+    card = client.post(f"/api/decks/{deck['id']}/cards", json={"front": "Q", "back": "A"}).json()
+    assert client.post("/api/reviews", json={"card_id": card["id"], "quality": quality}).status_code == 200
