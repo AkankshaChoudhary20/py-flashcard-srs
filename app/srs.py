@@ -22,13 +22,14 @@ Standard SM-2 rules:
       computed based on the new repetition count:
           repetitions == 1 -> interval = 1 day
           repetitions == 2 -> interval = 6 days
-          repetitions >  2 -> interval = round(previous_interval * ease_factor)
+          repetitions >  2 -> interval = ceil(previous_interval * previous_ease_factor)
       ease_factor is updated using the SM-2 formula:
           EF' = EF + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
       and is clamped to a minimum of 1.3.
 """
 from __future__ import annotations
 
+from math import ceil
 from dataclasses import dataclass
 from datetime import date, timedelta
 
@@ -105,7 +106,9 @@ def review(state: SRSState, quality: int, today: date | None = None) -> ReviewRe
         elif new_repetitions == 2:
             new_interval = 6
         else:
-            new_interval = max(1, round(state.interval_days * new_ef))
+            # Schedule with the previously stored factor; this review's new
+            # factor affects future repetitions. Fractional days round up.
+            new_interval = max(1, ceil(state.interval_days * state.ease_factor))
 
     due_date = today + timedelta(days=new_interval)
 

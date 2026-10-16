@@ -223,3 +223,18 @@ def test_grade_to_quality_rejects_unknown_grade():
 def test_due_date_defaults_to_today_when_not_given():
     result = review(brand_new_card(), quality=4)
     assert result.due_date == date.today().fromordinal(date.today().toordinal() + 1)
+
+
+@pytest.mark.parametrize("quality,new_factor", [(3, 2.36), (5, 2.6)])
+def test_interval_uses_previous_factor_before_applying_current_grade(quality, new_factor):
+    state = SRSState(ease_factor=2.5, interval_days=10, repetitions=2)
+    result = review(state, quality=quality, today=TODAY)
+    assert result.interval_days == 25
+    assert result.ease_factor == pytest.approx(new_factor)
+    assert result.due_date == date(2026, 1, 26)
+
+
+def test_fractional_interval_rounds_up():
+    state = SRSState(ease_factor=2.36, interval_days=6, repetitions=2)
+    result = review(state, quality=4, today=TODAY)
+    assert result.interval_days == 15  # 6 * 2.36 = 14.16

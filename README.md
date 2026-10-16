@@ -1,7 +1,10 @@
 # Flashcard SRS
 
 A small spaced-repetition flashcard app (like Anki), implementing the
-SM-2 scheduling algorithm.
+SM-2 scheduling algorithm. For established cards, intervals use the previously
+stored ease factor and round fractional days upward, following the
+[SM-2 interval rules](https://www-beta.supermemo.com/archives1990-2015/english/ol/sm2).
+The current review updates the ease factor used by subsequent reviews.
 
 - **Backend:** FastAPI + Uvicorn
 - **Storage:** SQLite via the stdlib `sqlite3` module (no ORM)
