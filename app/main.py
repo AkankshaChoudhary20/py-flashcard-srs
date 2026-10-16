@@ -161,6 +161,9 @@ def get_due_cards(deck_id: Optional[int] = None):
 def submit_review(payload: ReviewIn):
     quality = payload.resolve_quality()
     with db.connect() as conn:
+        # Reserve the write transaction before reading the previous SRS state,
+        # so concurrent reviews cannot overwrite each other's progress.
+        conn.execute("BEGIN IMMEDIATE")
         card_row = db.get_card(conn, payload.card_id)
         if card_row is None:
             raise HTTPException(404, f"card {payload.card_id} not found")
