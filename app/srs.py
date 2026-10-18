@@ -87,7 +87,7 @@ def review(state: SRSState, quality: int, today: date | None = None) -> ReviewRe
         ReviewResult with the new ease_factor, interval_days, repetitions,
         and due_date.
     """
-    if not 0 <= quality <= 5:
+    if type(quality) is not int or not 0 <= quality <= 5:
         raise ValueError(f"quality must be between 0 and 5, got {quality}")
 
     if today is None:
