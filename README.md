@@ -110,3 +110,9 @@ See `tests/test_srs.py` for scenarios covering first reviews, consecutive
 boundary quality values (0, 3, 5, and out-of-range).
 
 Raw review quality must be a JSON integer; strings, booleans, and decimal values return HTTP `422` without changing the card.
+
+## Continuous integration
+
+CI uses Python 3.14, installs `requirements.txt`, checks dependency compatibility with `pip check`, and runs the complete pytest suite.
+
+Checks run on pushes and pull requests and can be started manually from the Actions tab. The workflow has read-only repository permissions, cancels superseded runs, and stops after 15 minutes.
