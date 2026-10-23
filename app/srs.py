@@ -110,6 +110,9 @@ def review(state: SRSState, quality: int, today: date | None = None) -> ReviewRe
             # factor affects future repetitions. Fractional days round up.
             new_interval = max(1, ceil(state.interval_days * state.ease_factor))
 
+    # Mature cards must remain reviewable even when SM-2 grows their
+    # interval beyond the last date supported by Python and SQLite.
+    new_interval = min(new_interval, (date.max - today).days)
     due_date = today + timedelta(days=new_interval)
 
     return ReviewResult(
