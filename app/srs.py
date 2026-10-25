@@ -108,7 +108,12 @@ def review(state: SRSState, quality: int, today: date | None = None) -> ReviewRe
         else:
             # Schedule with the previously stored factor; this review's new
             # factor affects future repetitions. Fractional days round up.
-            new_interval = max(1, ceil(state.interval_days * state.ease_factor))
+            remaining_days = (date.max - today).days
+            # Compare before multiplying: even finite stored factors can overflow.
+            if state.interval_days >= remaining_days / state.ease_factor:
+                new_interval = remaining_days
+            else:
+                new_interval = max(1, ceil(state.interval_days * state.ease_factor))
 
     # Mature cards must remain reviewable even when SM-2 grows their
     # interval beyond the last date supported by Python and SQLite.
