@@ -29,7 +29,7 @@ Standard SM-2 rules:
 """
 from __future__ import annotations
 
-from math import ceil
+from math import ceil, isfinite
 from dataclasses import dataclass
 from datetime import date, timedelta
 
@@ -89,6 +89,15 @@ def review(state: SRSState, quality: int, today: date | None = None) -> ReviewRe
     """
     if type(quality) is not int or not 0 <= quality <= 5:
         raise ValueError(f"quality must be between 0 and 5, got {quality}")
+
+    if (type(state.ease_factor) not in (int, float)
+            or not MIN_EASE_FACTOR <= state.ease_factor <= 1.7976931348623157e308
+            or not isfinite(state.ease_factor)):
+        raise ValueError("ease_factor must be finite and at least 1.3")
+    for name in ("interval_days", "repetitions"):
+        value = getattr(state, name)
+        if type(value) is not int or value < 0:
+            raise ValueError(f"{name} must be a nonnegative integer")
 
     if today is None:
         today = date.today()
