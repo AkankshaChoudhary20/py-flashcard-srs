@@ -73,7 +73,7 @@ class CardOut(BaseModel):
 
 
 class ReviewIn(BaseModel):
-    card_id: int
+    card_id: int = Field(strict=True, ge=1, le=2**63 - 1)
     grade: Optional[str] = None
     quality: Optional[int] = Field(default=None, strict=True)
 
