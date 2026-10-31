@@ -11,9 +11,9 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Path as PathParam, Query
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
@@ -127,7 +127,7 @@ def list_decks():
 # ---------------------------------------------------------------------------
 
 @app.post("/api/decks/{deck_id}/cards", response_model=CardOut)
-def add_card(deck_id: int, payload: CardCreate):
+def add_card(deck_id: Annotated[int, PathParam(ge=1, le=2**63 - 1)], payload: CardCreate):
     with db.connect() as conn:
         if db.get_deck(conn, deck_id) is None:
             raise HTTPException(404, f"deck {deck_id} not found")
@@ -136,7 +136,7 @@ def add_card(deck_id: int, payload: CardCreate):
 
 
 @app.get("/api/decks/{deck_id}/cards", response_model=list[CardOut])
-def list_cards_in_deck(deck_id: int):
+def list_cards_in_deck(deck_id: Annotated[int, PathParam(ge=1, le=2**63 - 1)]):
     with db.connect() as conn:
         if db.get_deck(conn, deck_id) is None:
             raise HTTPException(404, f"deck {deck_id} not found")
@@ -144,7 +144,7 @@ def list_cards_in_deck(deck_id: int):
 
 
 @app.get("/api/cards/due", response_model=list[CardOut])
-def get_due_cards(deck_id: Optional[int] = None):
+def get_due_cards(deck_id: Annotated[Optional[int], Query(ge=1, le=2**63 - 1)] = None):
     """Due cards, optionally scoped to a single deck. Omit deck_id to get
     due cards across all decks."""
     with db.connect() as conn:
