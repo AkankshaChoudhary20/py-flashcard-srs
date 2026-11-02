@@ -140,6 +140,8 @@ def review(state: SRSState, quality: int, today: date | None = None) -> ReviewRe
 def grade_to_quality(grade: str) -> int:
     """Map an Again/Hard/Good/Easy button label (case-insensitive) to a
     0-5 SM-2 quality score."""
+    if not isinstance(grade, str):
+        raise ValueError("grade must be a string")
     key = grade.strip().lower()
     if key not in GRADE_TO_QUALITY:
         raise ValueError(
