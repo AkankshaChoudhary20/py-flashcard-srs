@@ -101,6 +101,8 @@ def review(state: SRSState, quality: int, today: date | None = None) -> ReviewRe
 
     if today is None:
         today = date.today()
+    elif type(today) is not date:
+        raise ValueError("today must be a date without a time component")
 
     new_ef = _new_ease_factor(state.ease_factor, quality)
 
