@@ -78,6 +78,12 @@ class ReviewIn(BaseModel):
     quality: Optional[int] = Field(default=None, strict=True)
 
     def resolve_quality(self) -> int:
+        if self.quality is not None and self.grade is not None:
+            try:
+                if grade_to_quality(self.grade) != self.quality:
+                    raise HTTPException(400, "grade and quality must agree")
+            except ValueError as exc:
+                raise HTTPException(400, str(exc)) from exc
         if self.quality is not None:
             if not 0 <= self.quality <= 5:
                 raise HTTPException(400, "quality must be between 0 and 5")
