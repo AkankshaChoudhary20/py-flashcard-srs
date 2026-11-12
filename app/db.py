@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS card (
 
 CREATE INDEX IF NOT EXISTS idx_card_deck_id ON card(deck_id);
 CREATE INDEX IF NOT EXISTS idx_card_due_date ON card(due_date);
+CREATE INDEX IF NOT EXISTS idx_card_deck_due_date ON card(deck_id, due_date);
 """
 
 
