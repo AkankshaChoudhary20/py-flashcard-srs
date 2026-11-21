@@ -100,7 +100,7 @@ Rules:
   interval depends on the new repetition count:
   - 1st repetition → 1 day
   - 2nd repetition → 6 days
-  - 3rd+ repetition → `round(previous_interval * new_ease_factor)`
+  - 3rd+ repetition → `ceil(previous_interval * previous_ease_factor)`
 - **Ease factor update** (standard SM-2 formula):
   `EF' = EF + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))`, clamped to a
   minimum of `1.3`.
