@@ -133,10 +133,10 @@ def get_due_cards(
     today = (on or date.today()).isoformat()
     if deck_id is None:
         return conn.execute(
-            "SELECT * FROM card WHERE due_date <= ? ORDER BY due_date", (today,)
+            "SELECT * FROM card WHERE due_date <= ? ORDER BY due_date, id", (today,)
         ).fetchall()
     return conn.execute(
-        "SELECT * FROM card WHERE deck_id = ? AND due_date <= ? ORDER BY due_date",
+        "SELECT * FROM card WHERE deck_id = ? AND due_date <= ? ORDER BY due_date, id",
         (deck_id, today),
     ).fetchall()
 
